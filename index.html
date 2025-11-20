@@ -311,11 +311,6 @@
                 </div>
                 
                 <button onclick="saveConfig()" id="saveConfigBtn">💾 Save Configuration</button>
-                
-                <div class="sync-controls">
-                    <button onclick="syncToSheets()" class="btn-success">⬆️ Sync to Sheets</button>
-                    <button onclick="syncFromSheets()" class="btn-secondary">⬇️ Sync from Sheets</button>
-                </div>
 
                 <!-- Google Apps Script Controls -->
                 <div class="card" style="margin-top: 20px; background: #f8fafc;">
@@ -333,11 +328,12 @@
                 </div>
 
                 <div class="instructions">
-                    <h3>📋 Setup Instructions:</h3>
+                    <h3>📋 How It Works:</h3>
                     <ol>
                         <li>Save your Google Sheet URL and Sheet Name above</li>
-                        <li>Use the Google Apps Script controls to test synchronization</li>
-                        <li>Start editing your sheet - changes will auto-sync to Supabase!</li>
+                        <li>Use "Pull from Supabase" to load existing data</li>
+                        <li>Edit your Google Sheet - changes auto-sync to Supabase!</li>
+                        <li>Use "Manual Sync" to trigger immediate sync</li>
                     </ol>
                 </div>
             </div>
@@ -514,64 +510,6 @@
             }
         }
 
-        // Sync data to Google Sheets
-        // Sync data to Google Sheets
-async function syncToSheets() {
-    if (!currentConfig?.is_configured) {
-        showStatus('configStatus', 'Please configure Google Sheets first', 'error');
-        return;
-    }
-
-    showStatus('configStatus', 'Starting sync to Google Sheets...', 'info');
-
-    try {
-        // Get bookings data
-        const { data: bookings, error } = await supabase
-            .from('bookings')
-            .select('*')
-            .order('created_at', { ascending: false });
-
-        if (error) throw error;
-
-        // Update sync status - FIXED: Remove updated_at since it doesn't exist
-        const { error: updateError } = await supabase
-            .from('bookings')
-            .update({ sync_status: 'Synced to Sheets' })
-            .neq('sync_status', 'Synced to Sheets');
-
-        if (updateError) throw updateError;
-
-        showStatus('configStatus', `Successfully synced ${bookings.length} bookings to Google Sheets!`, 'success');
-        
-    } catch (error) {
-        console.error('Sync error:', error);
-        showStatus('configStatus', 'Error syncing to Google Sheets: ' + error.message, 'error');
-    }
-}
-
-        // Sync data from Google Sheets
-        async function syncFromSheets() {
-            if (!currentConfig?.is_configured) {
-                showStatus('configStatus', 'Please configure Google Sheets first', 'error');
-                return;
-            }
-
-            showStatus('configStatus', 'Starting sync from Google Sheets...', 'info');
-
-            try {
-                // For demo - in real app this would call your API
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                
-                showStatus('configStatus', 'Sync completed! Data pulled from Google Sheets.', 'success');
-                loadBookings();
-                loadInvoices();
-                
-            } catch (error) {
-                console.error('Sync error:', error);
-                showStatus('configStatus', 'Error syncing from Google Sheets', 'error');
-            }
-        }
-
         // 🚀 Manual Sync Trigger
         async function manualSync() {
             try {
@@ -587,7 +525,7 @@ async function syncToSheets() {
                     })
                 });
                 
-                const result = await response.text();
+                const result = await response.json();
                 showStatus('scriptStatus', 'Manual sync triggered successfully!', 'success');
                 console.log('Manual sync result:', result);
                 
@@ -612,7 +550,7 @@ async function syncToSheets() {
                     })
                 });
                 
-                const result = await response.text();
+                const result = await response.json();
                 showStatus('scriptStatus', 'Config check completed! Check console for details.', 'success');
                 console.log('Config check result:', result);
                 
@@ -637,7 +575,7 @@ async function syncToSheets() {
                     })
                 });
                 
-                const result = await response.text();
+                const result = await response.json();
                 showStatus('scriptStatus', 'Data pulled successfully from Supabase to Sheets!', 'success');
                 console.log('Pull result:', result);
                 
