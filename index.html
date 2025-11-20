@@ -250,6 +250,16 @@
             font-family: monospace;
         }
 
+        .script-url {
+            background: #f1f5f9;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-family: monospace;
+            word-break: break-all;
+            font-size: 14px;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
@@ -307,13 +317,26 @@
                     <button onclick="syncFromSheets()" class="btn-secondary">⬇️ Sync from Sheets</button>
                 </div>
 
+                <!-- Google Apps Script Controls -->
+                <div class="card" style="margin-top: 20px; background: #f8fafc;">
+                    <h3>🔄 Google Apps Script Controls</h3>
+                    <div class="script-url">
+                        <strong>Script URL:</strong><br>
+                        https://script.google.com/macros/s/AKfycbzvhBnYfampYu9-OTpAlvgM1sj52iVXW-3ejWx6c-j9IpcBdWSizNGtoaejr-PZ-33cLA/exec
+                    </div>
+                    <div class="sync-controls">
+                        <button onclick="manualSync()" class="btn-success">⚡ Manual Sync</button>
+                        <button onclick="checkConfig()" class="btn-secondary">📋 Check Config</button>
+                        <button onclick="pullFromSupabase()" class="btn-warning">📥 Pull from Supabase</button>
+                    </div>
+                    <div id="scriptStatus"></div>
+                </div>
+
                 <div class="instructions">
                     <h3>📋 Setup Instructions:</h3>
                     <ol>
                         <li>Save your Google Sheet URL and Sheet Name above</li>
-                        <li>Go to <a href="https://script.google.com" target="_blank">script.google.com</a></li>
-                        <li>Create new project and paste the Google Apps Script code</li>
-                        <li>Set up trigger for <code>onEdit</code> function</li>
+                        <li>Use the Google Apps Script controls to test synchronization</li>
                         <li>Start editing your sheet - changes will auto-sync to Supabase!</li>
                     </ol>
                 </div>
@@ -388,6 +411,9 @@
         // Supabase configuration
         const SUPABASE_URL = 'https://fiqlikvsoqqlcbbtsmwl.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZpcWxpa3Zzb3FxbGNiYnRzbXdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI0OTY5NTgsImV4cCI6MjA3ODA3Mjk1OH0.ESMTiXRhIYnsMJ34XYESHrTyt-U1YtIENXWCDCwWleM';
+        
+        // Google Apps Script Web App URL
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzvhBnYfampYu9-OTpAlvgM1sj52iVXW-3ejWx6c-j9IpcBdWSizNGtoaejr-PZ-33cLA/exec';
         
         // Initialize Supabase
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -542,6 +568,81 @@
             } catch (error) {
                 console.error('Sync error:', error);
                 showStatus('configStatus', 'Error syncing from Google Sheets', 'error');
+            }
+        }
+
+        // 🚀 Manual Sync Trigger
+        async function manualSync() {
+            try {
+                showStatus('scriptStatus', 'Triggering manual sync...', 'info');
+                
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'manual_sync'
+                    })
+                });
+                
+                const result = await response.text();
+                showStatus('scriptStatus', 'Manual sync triggered successfully!', 'success');
+                console.log('Manual sync result:', result);
+                
+            } catch (error) {
+                console.error('Manual sync error:', error);
+                showStatus('scriptStatus', 'Error triggering manual sync', 'error');
+            }
+        }
+
+        // 📋 Check Current Configuration
+        async function checkConfig() {
+            try {
+                showStatus('scriptStatus', 'Checking configuration...', 'info');
+                
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'check_config'
+                    })
+                });
+                
+                const result = await response.text();
+                showStatus('scriptStatus', 'Config check completed! Check console for details.', 'success');
+                console.log('Config check result:', result);
+                
+            } catch (error) {
+                console.error('Config check error:', error);
+                showStatus('scriptStatus', 'Error checking config', 'error');
+            }
+        }
+
+        // 📥 Pull Data from Supabase to Sheets
+        async function pullFromSupabase() {
+            try {
+                showStatus('scriptStatus', 'Pulling data from Supabase to Sheets...', 'info');
+                
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'pull_from_supabase'
+                    })
+                });
+                
+                const result = await response.text();
+                showStatus('scriptStatus', 'Data pulled successfully from Supabase to Sheets!', 'success');
+                console.log('Pull result:', result);
+                
+            } catch (error) {
+                console.error('Pull error:', error);
+                showStatus('scriptStatus', 'Error pulling data from Supabase', 'error');
             }
         }
 
