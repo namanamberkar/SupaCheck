@@ -515,38 +515,39 @@
         }
 
         // Sync data to Google Sheets
-        async function syncToSheets() {
-            if (!currentConfig?.is_configured) {
-                showStatus('configStatus', 'Please configure Google Sheets first', 'error');
-                return;
-            }
+        // Sync data to Google Sheets
+async function syncToSheets() {
+    if (!currentConfig?.is_configured) {
+        showStatus('configStatus', 'Please configure Google Sheets first', 'error');
+        return;
+    }
 
-            showStatus('configStatus', 'Starting sync to Google Sheets...', 'info');
+    showStatus('configStatus', 'Starting sync to Google Sheets...', 'info');
 
-            try {
-                // Get bookings data
-                const { data: bookings, error } = await supabase
-                    .from('bookings')
-                    .select('*')
-                    .order('created_at', { ascending: false });
+    try {
+        // Get bookings data
+        const { data: bookings, error } = await supabase
+            .from('bookings')
+            .select('*')
+            .order('created_at', { ascending: false });
 
-                if (error) throw error;
+        if (error) throw error;
 
-                // Update sync status
-                const { error: updateError } = await supabase
-                    .from('bookings')
-                    .update({ sync_status: 'Synced to Sheets', updated_at: new Date().toISOString() })
-                    .neq('sync_status', 'Synced to Sheets');
+        // Update sync status - FIXED: Remove updated_at since it doesn't exist
+        const { error: updateError } = await supabase
+            .from('bookings')
+            .update({ sync_status: 'Synced to Sheets' })
+            .neq('sync_status', 'Synced to Sheets');
 
-                if (updateError) throw updateError;
+        if (updateError) throw updateError;
 
-                showStatus('configStatus', `Successfully synced ${bookings.length} bookings to Google Sheets!`, 'success');
-                
-            } catch (error) {
-                console.error('Sync error:', error);
-                showStatus('configStatus', 'Error syncing to Google Sheets', 'error');
-            }
-        }
+        showStatus('configStatus', `Successfully synced ${bookings.length} bookings to Google Sheets!`, 'success');
+        
+    } catch (error) {
+        console.error('Sync error:', error);
+        showStatus('configStatus', 'Error syncing to Google Sheets: ' + error.message, 'error');
+    }
+}
 
         // Sync data from Google Sheets
         async function syncFromSheets() {
